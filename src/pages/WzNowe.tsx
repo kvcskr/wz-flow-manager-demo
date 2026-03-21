@@ -25,8 +25,8 @@ interface PozycjaForm {
   produkt_id: string;
   nazwa: string;
   jednostka: string;
-  wydano: number;
-  zwrocono: number;
+  wydano: string;
+  zwrocono: string;
 }
 
 function WzNoweContent() {
@@ -53,8 +53,8 @@ function WzNoweContent() {
           produkt_id: p.id,
           nazwa: p.nazwa,
           jednostka: p.jednostka,
-          wydano: 0,
-          zwrocono: 0,
+          wydano: '',
+          zwrocono: '',
         })));
       } finally {
         setLoading(false);
@@ -63,8 +63,9 @@ function WzNoweContent() {
     fetch();
   }, [orgId]);
 
-  const updatePozycja = (idx: number, field: 'wydano' | 'zwrocono', value: number) => {
-    setPozycje(prev => prev.map((p, i) => i === idx ? { ...p, [field]: Math.max(0, value) } : p));
+  const updatePozycja = (idx: number, field: 'wydano' | 'zwrocono', raw: string) => {
+    const digits = raw.replace(/\D/g, '');
+    setPozycje(prev => prev.map((p, i) => i === idx ? { ...p, [field]: digits } : p));
   };
 
   const handleSave = async () => {
@@ -99,8 +100,8 @@ function WzNoweContent() {
     const items = pozycje.map(p => ({
       wz_id: wz.id,
       produkt_id: p.produkt_id,
-      wydano: p.wydano,
-      zwrocono: p.zwrocono,
+      wydano: parseInt(p.wydano) || 0,
+      zwrocono: parseInt(p.zwrocono) || 0,
       cena_snapshot: priceMap.get(p.produkt_id) ?? 0,
     }));
 
@@ -159,15 +160,15 @@ function WzNoweContent() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="text-xs">Wydano</Label>
-                <Input type="number" min={0} value={p.wydano} onChange={(e) => updatePozycja(idx, 'wydano', parseInt(e.target.value) || 0)} />
+                <Input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="0" value={p.wydano} onChange={(e) => updatePozycja(idx, 'wydano', e.target.value)} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Zwrócono</Label>
-                <Input type="number" min={0} value={p.zwrocono} onChange={(e) => updatePozycja(idx, 'zwrocono', parseInt(e.target.value) || 0)} />
+                <Input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="0" value={p.zwrocono} onChange={(e) => updatePozycja(idx, 'zwrocono', e.target.value)} />
               </div>
             </div>
             <p className="text-sm text-muted-foreground mt-2">
-              Saldo: <span className="font-medium text-foreground">{p.wydano - p.zwrocono}</span> {p.jednostka}
+              Saldo: <span className="font-medium text-foreground">{(parseInt(p.wydano) || 0) - (parseInt(p.zwrocono) || 0)}</span> {p.jednostka}
             </p>
           </CardContent>
         </Card>
