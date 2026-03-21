@@ -22,6 +22,7 @@ export default function Zespol() {
   const [loading, setLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePassword, setInvitePassword] = useState('');
   const [inviteRole, setInviteRole] = useState('kierowca');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [inviting, setInviting] = useState(false);
@@ -44,15 +45,30 @@ export default function Zespol() {
   }, [orgId]);
 
   const handleInvite = async () => {
-    if (!inviteEmail.trim() || !orgId) return;
+    if (!inviteEmail.trim() || !invitePassword.trim() || !orgId) return;
     setInviting(true);
 
-    // We'll use edge function or direct signup approach
-    // For now, create the user entry manually - in production use inviteUserByEmail
-    toast({ title: 'Informacja', description: 'Zaproszenie wymaga konfiguracji serwera email. Użytkownik musi się zarejestrować samodzielnie.' });
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-team-member`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`,
+      },
+      body: JSON.stringify({ email: inviteEmail.trim(), password: invitePassword.trim(), role: inviteRole }),
+    });
+
+    const result = await res.json();
+    if (!res.ok) {
+      toast({ title: 'Błąd', description: result.error || 'Nie udało się utworzyć konta.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Gotowe', description: `Konto dla ${inviteEmail} zostało utworzone.` });
+      setInviteOpen(false);
+      setInviteEmail('');
+      setInvitePassword('');
+      fetchData();
+    }
     setInviting(false);
-    setInviteOpen(false);
-    setInviteEmail('');
   };
 
   const handleDelete = async () => {
@@ -76,7 +92,8 @@ export default function Zespol() {
           <DialogContent>
             <DialogHeader><DialogTitle>Zaproś użytkownika</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div><Label>Email</Label><Input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} /></div>
+              <div><Label>Email</Label><Input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="kierowca@firma.pl" /></div>
+              <div><Label>Hasło startowe</Label><Input type="password" value={invitePassword} onChange={e => setInvitePassword(e.target.value)} placeholder="min. 6 znaków" /></div>
               <div>
                 <Label>Rola</Label>
                 <Select value={inviteRole} onValueChange={setInviteRole}>
@@ -88,7 +105,7 @@ export default function Zespol() {
                 </Select>
               </div>
             </div>
-            <DialogFooter><Button onClick={handleInvite} disabled={!inviteEmail.trim() || inviting}>{inviting ? 'Wysyłanie...' : 'Zaproś'}</Button></DialogFooter>
+            <DialogFooter><Button onClick={handleInvite} disabled={!inviteEmail.trim() || !invitePassword.trim() || inviting}>{inviting ? 'Tworzenie...' : 'Utwórz konto'}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
