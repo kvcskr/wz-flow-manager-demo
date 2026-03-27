@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { SuperadminLayout } from '@/components/SuperadminLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,9 +33,6 @@ export default function Superadmin() {
   const [newNip, setNewNip] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [adding, setAdding] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [savingPassword, setSavingPassword] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -113,27 +110,6 @@ export default function Superadmin() {
       fetchData();
     }
     setAdding(false);
-  };
-
-  const handlePasswordChange = async () => {
-    if (newPassword !== confirmPassword) {
-      toast({ title: 'Błąd', description: 'Hasła nie są identyczne.', variant: 'destructive' });
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast({ title: 'Błąd', description: 'Hasło musi mieć co najmniej 6 znaków.', variant: 'destructive' });
-      return;
-    }
-    setSavingPassword(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      toast({ title: 'Błąd', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Zapisano', description: 'Hasło zostało zmienione.' });
-      setNewPassword('');
-      setConfirmPassword('');
-    }
-    setSavingPassword(false);
   };
 
   const statusColor = (s: string) => {
@@ -279,22 +255,6 @@ export default function Superadmin() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
-      <Card className="max-w-lg mt-6">
-        <CardHeader><CardTitle>Zmiana hasła</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Nowe hasło</Label>
-            <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Minimum 6 znaków" />
-          </div>
-          <div className="space-y-2">
-            <Label>Potwierdź nowe hasło</Label>
-            <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Powtórz hasło" />
-          </div>
-          <Button onClick={handlePasswordChange} disabled={savingPassword || !newPassword || !confirmPassword}>
-            <Save className="h-4 w-4 mr-2" /> {savingPassword ? 'Zapisywanie...' : 'Zmień hasło'}
-          </Button>
         </CardContent>
       </Card>
     </SuperadminLayout>
