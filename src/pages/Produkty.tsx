@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Pencil, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Pencil, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 export default function Produkty() {
   const { orgId } = useAuth();
@@ -72,6 +73,13 @@ export default function Produkty() {
     fetchData();
   };
 
+  const handleDelete = async (p: any) => {
+    const { error } = await supabase.from('produkty').delete().eq('id', p.id);
+    if (error) { toast({ title: 'Błąd', description: 'Nie można usunąć produktu (ma powiązane dokumenty WZ).', variant: 'destructive' }); return; }
+    toast({ title: 'Usunięto', description: `Produkt "${p.nazwa}" został usunięty.` });
+    fetchData();
+  };
+
   return (
     <AdminLayout>
       <div className="flex items-center justify-between mb-6">
@@ -119,6 +127,21 @@ export default function Produkty() {
                     <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="sm" onClick={() => { setEditProd(p); setFormNazwa(p.nazwa); setFormJednostka(p.jednostka); }}><Pencil className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="sm" onClick={() => toggleActive(p)}>{p.aktywny ? 'Dezaktywuj' : 'Aktywuj'}</Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Usuń produkt</AlertDialogTitle>
+                            <AlertDialogDescription>Czy na pewno chcesz usunąć produkt <strong>{p.nazwa}</strong>? Tej operacji nie można cofnąć. Produkt zostanie usunięty tylko jeśli nie ma powiązanych dokumentów WZ.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(p)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Usuń</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))}
