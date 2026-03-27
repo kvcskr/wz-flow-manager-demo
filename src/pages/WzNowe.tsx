@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Check, ChevronsUpDown, CalendarIcon, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Save } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -39,6 +39,7 @@ function WzNoweContent() {
   const [pozycje, setPozycje] = useState<PozycjaForm[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [klientOpen, setKlientOpen] = useState(false);
 
   useEffect(() => {
     if (!orgId) { setLoading(false); return; }
@@ -126,12 +127,30 @@ function WzNoweContent() {
         <CardContent className="pt-6 space-y-4">
           <div className="space-y-2">
             <Label>Klient</Label>
-            <Select value={selectedKlient} onValueChange={setSelectedKlient}>
-              <SelectTrigger><SelectValue placeholder="Wybierz klienta..." /></SelectTrigger>
-              <SelectContent>
-                {klienci.map(k => <SelectItem key={k.id} value={k.id}>{k.nazwa}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Popover open={klientOpen} onOpenChange={setKlientOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" aria-expanded={klientOpen} className="w-full justify-between font-normal">
+                  {selectedKlient ? klienci.find(k => k.id === selectedKlient)?.nazwa : 'Wybierz klienta...'}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Szukaj klienta..." />
+                  <CommandList>
+                    <CommandEmpty>Nie znaleziono klienta.</CommandEmpty>
+                    <CommandGroup>
+                      {klienci.map(k => (
+                        <CommandItem key={k.id} value={k.nazwa} onSelect={() => { setSelectedKlient(k.id); setKlientOpen(false); }}>
+                          <Check className={cn('mr-2 h-4 w-4', selectedKlient === k.id ? 'opacity-100' : 'opacity-0')} />
+                          {k.nazwa}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2">

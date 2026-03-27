@@ -11,8 +11,9 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/format';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 export default function Klienci() {
   const { orgId } = useAuth();
@@ -101,6 +102,14 @@ export default function Klienci() {
     fetchData();
   };
 
+  const handleDelete = async (k: any) => {
+    await supabase.from('ceny_klientow').delete().eq('klient_id', k.id);
+    const { error } = await supabase.from('klienci').delete().eq('id', k.id);
+    if (error) { toast({ title: 'Błąd', description: 'Nie można usunąć klienta (ma powiązane dokumenty WZ).', variant: 'destructive' }); return; }
+    toast({ title: 'Usunięto', description: `Klient "${k.nazwa}" został usunięty.` });
+    fetchData();
+  };
+
   return (
     <AdminLayout>
       <div className="flex items-center justify-between mb-6">
@@ -150,6 +159,21 @@ export default function Klienci() {
                         <Button variant="ghost" size="sm" onClick={() => toggleActive(k)}>
                           {k.aktywny ? 'Dezaktywuj' : 'Aktywuj'}
                         </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Usuń klienta</AlertDialogTitle>
+                              <AlertDialogDescription>Czy na pewno chcesz usunąć klienta <strong>{k.nazwa}</strong>? Tej operacji nie można cofnąć. Klient zostanie usunięty tylko jeśli nie ma powiązanych dokumentów WZ.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(k)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Usuń</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))}
