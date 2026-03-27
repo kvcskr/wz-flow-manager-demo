@@ -35,7 +35,7 @@ export default function Ustawienia() {
   const handleSave = async () => {
     if (!orgId) return;
     setSaving(true);
-    const { error } = await supabase.from('organizacje').update({ nazwa: nazwaNaWz, nazwa_na_wz: nazwaNaWz, nip_na_wz: nipNaWz }).eq('id', orgId);
+    const { error } = await supabase.from('organizacje').update({ nazwa: nazwaNaWz, nazwa_na_wz: nazwaNaWz, nip: nipNaWz, nip_na_wz: nipNaWz }).eq('id', orgId);
     if (error) {
       toast({ title: 'Błąd', description: error.message, variant: 'destructive' });
     } else {
