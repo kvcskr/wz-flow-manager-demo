@@ -96,7 +96,7 @@ export default function WzWydruk() {
               <th className="text-right py-2 px-1">Wydano</th>
               <th className="text-right py-2 px-1">Zwrócono</th>
               <th className="text-right py-2 px-1">Saldo</th>
-              <th className="text-right py-2 px-1">Cena jedn.</th>
+              <th className="text-right py-2 px-1">Cena netto</th>
               <th className="text-right py-2 px-1">Wartość</th>
             </tr>
           </thead>
